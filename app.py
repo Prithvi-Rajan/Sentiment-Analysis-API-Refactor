@@ -60,15 +60,14 @@ def get_response():
 
 
 @app.route('/predict', methods=['GET'])
-def sa_trpp():
-
+def sa_trp():
     response = get_response()
     return response
 
 
 @app.route('/')
 def index():
-    return '<h1>Application Deployed!</h1>'
+    return '<h1>Welcome to TheRedPurple\'s Sentiment Analysis API!</h1><h3>Go to /predict to input text to be predicted!</h3>'
 
 
 if __name__ == '__main__':

@@ -1,32 +1,16 @@
 from flask import Flask, make_response, jsonify
-from flask_restful import reqparse, abort
+from flask_restful import reqparse
 import pickle
-# import numpy as np
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 import re
 
 app = Flask(__name__)
 
-clf_path = './sentiment_analyser_keras.hdf5'
-model = load_model(clf_path)
-
-
-vec_path = 'tokenizer.pickle'
-with open(vec_path, 'rb') as f:
-    tokenizer = pickle.load(f)
-
-
-# argument parsing
-parser = reqparse.RequestParser()
-parser.add_argument('query')
-
-
-NON_ALPHANUM = re.compile(r'[\W]')
-NON_ASCII = re.compile(r'[^a-z0-1\s]')
-
 
 def normalize_texts(texts):
+    NON_ALPHANUM = re.compile(r'[\W]')
+    NON_ASCII = re.compile(r'[^a-z0-1\s]')
     normalized_texts = []
     for text in texts:
         lower = text.lower()
@@ -36,12 +20,18 @@ def normalize_texts(texts):
     return normalized_texts
 
 
-@app.route('/', methods=['GET'])
-def sa_trpp():
-    # use parser and find the user's query
+def get_response():
+    clf_path = './sentiment_analyser_keras.hdf5'
+    model = load_model(clf_path)
+    vec_path = 'tokenizer.pickle'
+    with open(vec_path, 'rb') as f:
+        tokenizer = pickle.load(f)
+
+    parser = reqparse.RequestParser()
+    parser.add_argument('query')
+
     args = parser.parse_args()
     user_query = args['query']
-
     MAX_LENGTH = 255
 
     user_query = normalize_texts([str(user_query)])
@@ -67,6 +57,18 @@ def sa_trpp():
     response = make_response(jsonify(output))
     response.headers["Access-Control-Allow-Origin"] = "*"
     return response
+
+
+@app.route('/predict', methods=['GET'])
+def sa_trpp():
+
+    response = get_response()
+    return response
+
+
+@app.route('/')
+def index():
+    return '<h1>Application Deployed!</h1>'
 
 
 if __name__ == '__main__':
